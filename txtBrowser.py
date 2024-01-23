@@ -14,7 +14,7 @@ from tkinter import messagebox
 
 pages = []
 
-
+selectReady = False
    
 
 
@@ -35,7 +35,6 @@ def getText():
     
 
     for r in result:
-        global final
         final = r.text
         #tyhjä väli kirjainten väliin
         #Final = ' '.join(final)
@@ -45,18 +44,40 @@ def getText():
         pageNum +=1
         break
     textbox.insert(INSERT,'\n',END)
+    
 
 #nettisivun tekstin tallennus äänitiedostoksi.
 def TxtTospeech():
+    global selectLng
+    selectLng = Toplevel()
+    selectLbl = Label(selectLng,text="Select the language of the text to be saved")
+    selectLbl.pack()
+    global languages
+    languages = ttk.Combobox(selectLng,values=['en','fi'])
     
+    languages.pack()
+    setBtn = Button(selectLng,text="Set",command=setLng)
+    setBtn.pack()
+    selectLng.mainloop()
+    
+
+def clearLngWin():
+    selectLng.destroy()
+
+
+
+def setLng():
+    savetxt = textbox.get("1.0",END)
+    selectedLng = languages.get()
+    print(selectedLng)
+
     filetype = [('MP-3','*.mp3')]
     savefile = filedialog.asksaveasfilename(filetypes = filetype, defaultextension = filetype)
     #käytetään final-muuttujaa eli tallennetaan sen sisältämä teksti
-    myobj = gTTS(text = final, lang = 'en', slow=False)
+    myobj = gTTS(text = savetxt, lang = selectedLng, slow=False)
     myobj.save(savefile)
-
+    clearLngWin()
     
-
 
 def goBack():
     clearText()
@@ -151,7 +172,7 @@ def clicker(event):
 
 root = Tk() 
 root.configure(background = 'grey1')
-root.title('JustText')
+root.title('TxtBrowser')
 
 #treeview näkymä ja sen tyylimäärittelyt
 style = ttk.Style()
@@ -186,7 +207,7 @@ frame4 = Frame(root)
 scrollbar = Scrollbar(frame2)
 scrollbar.pack(side = RIGHT, fill = Y)
 
-titlelbl = Label(root, text = 'Just text', font = titlefont,bg='grey1',fg='white')
+titlelbl = Label(root, text = 'Txt Browser', font = titlefont,bg='grey1',fg='white')
 pageEntry = Entry(frame1)
 textbox = Text(frame2,width=50,height=20,yscrollcommand = scrollbar.set,fg='blue', relief=SUNKEN)
 
