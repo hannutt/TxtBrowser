@@ -9,7 +9,7 @@ import requests
 from tkinter.font import Font
 from gtts import gTTS
 from tkinter import messagebox
-import wikipediaapi
+
 
 
 pages = []

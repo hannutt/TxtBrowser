@@ -1,1 +1,1 @@
-A Lynx webbrowser clone with Tkinter-GUI. first working version, but still under construction.
+a program that imitates the Lynx web browser. With the help of the beautiful soup 4 library, only text is searched from www pages. The program has a graphical user interface made with Python Tkinter. The bookmark feature is also available and the text of the searched web page can also be saved as an audio file.
