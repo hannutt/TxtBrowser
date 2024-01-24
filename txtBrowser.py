@@ -13,13 +13,13 @@ from tkinter import messagebox
 
 
 pages = []
-
+clicks = 0 
 selectReady = False
    
 
 
 
-def getText():
+def getText(e):
     clearText()
     #globaalin muuttujat, että niitä voidaan käyttää myös muissa funktioissa
     global pages
@@ -27,6 +27,12 @@ def getText():
     pageNum = 0
     webPage = (Entry.get(pageEntry))
     pages.append(webPage)
+    #jos webpage muuttuja alkaa merkkijonolla www. korvataan se tyhjällä
+    if webPage.startswith('www.'):
+        webPage=webPage.replace("www.","")
+    elif webPage.startswith('https://www'):
+        webPage=webPage.replace('https://www.','')
+
     page = requests.get('https://www.'+webPage)
     soup = BeautifulSoup(page.text,'html.parser')
     result = soup.find_all('html')
@@ -106,6 +112,7 @@ def goForward():
     page = requests.get('https://www.'+nextPage)
     soup = BeautifulSoup(page.text,'html.parser')
     result = soup.find_all('html')
+   
 
     for r in result:
         textbox.insert(INSERT,'\n',END)
@@ -113,7 +120,7 @@ def goForward():
         textbox.insert(INSERT,'\n',END)    
         textbox.insert(INSERT,final,END)
         textbox.insert(INSERT,'\n',END)
-        
+    
 
 
 def clearText():
@@ -129,14 +136,25 @@ def showHistory():
         textbox.insert(END,page+'\n')
     textbox.pack()
 
-#tallennettujen kirjanmerkkien näyttö omassa ikkunassaan
-def showBookmarks():
-
-    connection = sqlite3.connect('bookmarks.db')
-    cursor = connection.execute('SELECT * FROM PAGES')
-    for row in cursor:
+#tallennettujen kirjanmerkkien näyttö omassa ikkunassaan widget parametri sisältää tree komponentin joka lähetetään
+#funktiolle funktiokutsussa rivillä 242 jos click on jaollinen 1:llä niin piilotetaan bookmarks ikkuna, jos 2:lla niin
+#näyetään ikkuna uudelleen
+def showBookmarks(widget):
+    global clicks
+    clicks = clicks +1
+    print(clicks)
+    #print(clicks)
+    if clicks %1==0:
+        widget.pack_forget()
+      
+    if clicks %2==0:
+        widget.pack()
+        connection = sqlite3.connect('bookmarks.db')
+        cursor = connection.execute('SELECT * FROM PAGES')
+        for row in cursor:
+            
         #tietokannan data asetetaan values komennolla
-        tree.insert(parent='', index='end',iid=row[0],values=(row))
+            tree.insert(parent='', index='end',iid=row[0],values=(row))
     
     
 
@@ -168,6 +186,20 @@ def delUrl(event=''):
 def clicker(event):
     selectUrl()
 '''
+
+#fontin pienennys/suurennos
+def increaseFont():
+    global fontSize
+    fontSize=fontSize+1
+    textFont.configure(size=fontSize)
+
+def decreaceFont():
+    global fontSize
+    fontSize=fontSize-1
+    textFont.configure(size=fontSize)
+
+    
+
 
 
 root = Tk() 
@@ -204,15 +236,18 @@ frame1 = Frame(root,background = 'grey42')
 frame2 = Frame(root)
 frame3 = Frame(root, background = 'grey1')
 frame4 = Frame(root)
+frame5 = Frame(root,background = 'grey1')
 scrollbar = Scrollbar(frame2)
 scrollbar.pack(side = RIGHT, fill = Y)
 
 titlelbl = Label(root, text = 'Txt Browser', font = titlefont,bg='grey1',fg='white')
 pageEntry = Entry(frame1)
-textbox = Text(frame2,width=50,height=20,yscrollcommand = scrollbar.set,fg='blue', relief=SUNKEN)
+fontSize=14
+textFont = Font(family="Time New Roman",size=fontSize)
+textbox = Text(frame2,width=50,height=20,yscrollcommand = scrollbar.set,fg='blue', relief=SUNKEN,font=textFont)
 
 scrollbar.config(command = textbox.yview)
-getBtn = Button(frame1, text='GO', command = getText)
+#getBtn = Button(frame1, text='GO', command = getText)
 saveBtn = Button(frame1, text = 'Save', command = saveAdd)
 clearBtn = Button(frame3, text = 'Clear', command = clearText,fg='white',bg='grey1')
 #linksBtn = Button(frame3, text = 'Page links',command = getLinks)
@@ -220,7 +255,12 @@ prevBtn = Button(frame1, text = '<-', command = goBack,bg='grey1',fg='white')
 nextBtn = Button(frame1, text = '->', command = goForward,bg='grey1',fg='white')
 historyBtn = Button(frame3, text = 'History', command = showHistory,bg='grey1',fg='white')
 speechBtn = Button(frame3, text = 'txt to speech', command = TxtTospeech,bg='grey1',fg='white')
-bookBtn = Button(root, text = 'show bookmarks', command  = showBookmarks,bg='grey1',fg='white')
+#showbookmarks lähettää lambda-viittuksena commandin funktiokutsussa treeview-komponentin parametrina itse funktiolle
+bookBtn = Button(root, text = 'Show/Hide bookmarks', command  = lambda:showBookmarks(tree),bg='grey1',fg='white')
+fontPlus = Button(frame5,text="+",bg='grey1',fg='white',command=increaseFont)
+fontMinus = Button(frame5,text="-",bg='grey1',fg='white',command=decreaceFont)
+
+
 #delBtn = Button(root, text = 'Delete', command = delUrl)
 
 titlelbl.pack()
@@ -228,10 +268,13 @@ frame1.pack()
 frame2.pack()
 frame3.pack()
 frame4.pack()
+frame5.pack()
 prevBtn.pack(side=LEFT,pady=5,padx=5)
 pageEntry.pack(side=LEFT)
 nextBtn.pack(side=LEFT)
-getBtn.pack(side=RIGHT,pady=5, padx=5)
+fontPlus.pack(side=LEFT,pady=5,padx=5)
+fontMinus.pack(side=RIGHT,pady=5,padx=5)
+#getBtn.pack(side=RIGHT,pady=5, padx=5)
 saveBtn.pack(side=RIGHT)
 clearBtn.pack(side=RIGHT,pady=5,padx=5)
 
@@ -240,10 +283,12 @@ bookBtn.pack(pady=5,padx=5)
 textbox.pack()
 tree.pack()
 historyBtn.pack(side=LEFT,pady=5,padx=5)
+
 #delBtn.pack()
 #bindataan tuplaklikkaus ja clicker- funktio joka toteutetaan klikkausten jälkeen
 tree.bind("<Double-1>",selectUrl)
 tree.bind("<Control-d>",delUrl)
+root.bind("<Return>",getText)
 root.mainloop()
 
 
