@@ -198,6 +198,23 @@ def decreaceFont():
     fontSize=fontSize-1
     textFont.configure(size=fontSize)
 
+
+def findTxt():
+    textbox.tag_remove('found','1.0',END)
+    #muuttujaan s tallennetaan srcENtry kenttään syötetty teksti
+    s = searchInput.get()
+    if s:
+        #haun aloituspaikka, eli ensimmäinen kohta tekstilaatikosta
+        idx='1.0'
+        while 1:
+            idx = textbox.search(s,idx,nocase=1,stopindex=END)
+            if not idx:break
+            lastidx = '%s+%dc' % (idx,len(s))
+            textbox.tag_add('found',idx,lastidx)
+            idx=lastidx
+            textbox.tag_config('found',foreground='red')
+        searchInput.focus_set()
+
     
 
 
@@ -237,6 +254,7 @@ frame2 = Frame(root)
 frame3 = Frame(root, background = 'grey1')
 frame4 = Frame(root)
 frame5 = Frame(root,background = 'grey1')
+frame6 = Frame(root,background = 'grey1')
 scrollbar = Scrollbar(frame2)
 scrollbar.pack(side = RIGHT, fill = Y)
 
@@ -259,6 +277,8 @@ speechBtn = Button(frame3, text = 'txt to speech', command = TxtTospeech,bg='gre
 bookBtn = Button(root, text = 'Show/Hide bookmarks', command  = lambda:showBookmarks(tree),bg='grey1',fg='white')
 fontPlus = Button(frame5,text="+",bg='grey1',fg='white',command=increaseFont)
 fontMinus = Button(frame5,text="-",bg='grey1',fg='white',command=decreaceFont)
+searchBtn = Button(frame6,text='search from text',bg='grey1',fg='white',command=findTxt)
+searchInput = Entry(frame6)
 
 
 #delBtn = Button(root, text = 'Delete', command = delUrl)
@@ -269,11 +289,15 @@ frame2.pack()
 frame3.pack()
 frame4.pack()
 frame5.pack()
+frame6.pack()
 prevBtn.pack(side=LEFT,pady=5,padx=5)
 pageEntry.pack(side=LEFT)
 nextBtn.pack(side=LEFT)
 fontPlus.pack(side=LEFT,pady=5,padx=5)
 fontMinus.pack(side=RIGHT,pady=5,padx=5)
+searchInput.pack(side=RIGHT)
+searchBtn.pack(side=LEFT)
+
 #getBtn.pack(side=RIGHT,pady=5, padx=5)
 saveBtn.pack(side=RIGHT)
 clearBtn.pack(side=RIGHT,pady=5,padx=5)

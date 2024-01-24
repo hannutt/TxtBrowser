@@ -4,3 +4,4 @@ other features:
 Changing the font size with the buttons.
 Go back / go forward buttons
 Browsing history
+Text search
