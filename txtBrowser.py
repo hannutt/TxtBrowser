@@ -1,5 +1,6 @@
 from tkinter import*
 from tkinter import ttk
+
 import tkinter
 import customtkinter
 import sqlite3
@@ -9,14 +10,78 @@ import requests
 from tkinter.font import Font
 from gtts import gTTS
 from tkinter import messagebox
+import keyboard
 
 
-
+generalUrls = ['is.fi','cnn.com','yle.fi','mtv.fi','hs.fi','bbc.co.uk','cbn.com','abc.com']
 pages = []
 clicks = 0 
 selectReady = False
-   
+global temp
+temp = []
 
+
+def autoText(e):
+    value = e.widget.get()
+    print(value)
+    if value=='':
+        data=generalUrls
+    else:
+        data = []
+        #listan läpikäynti item on aina yksittäinen listan alkio
+        for item in generalUrls:
+            #jos käyttäjän syöttämällä (value) merkkijonolla/merkillä löytyy listalta tuloksia, lisätään tulokset data ja temp listoihin
+            if value.lower() in item.lower():
+                data.append(item)
+                #lisäys globaaliin listaan
+                temp.append(item)
+                print(temp)
+                pageEntry.delete(0,END)
+                #break komennon avulla näytetään vain yksi arvo, eli break keskeyttää for-silmukan toiston
+                for item in data:
+                    pageEntry.insert(END,item)
+                    break
+    #updateText(data)
+
+'''
+def updateText(data):
+    
+    #global i
+    #i=0
+    #poistaa käyttäjän syöttee
+    pageEntry.delete(0,END)
+    for item in data:
+       # i=i+1
+        pageEntry.insert(END,item)
+        break
+'''
+        
+  
+    #nextPrediction(data,i)
+#tämä päivittää j-muuttujaa ja näyttää sen avulla aina seuraavan alkion listalta
+j = 0
+def nextPrediction():
+    global j
+    j=j+1
+    print(temp)
+    try:
+
+        pageEntry.delete(0,END)    
+        pageEntry.insert(END,temp[j])
+        #try/exceptillä saadaan tulostettua allaoleva ilmoitus kun kohdataan indexerror
+    except IndexError:
+        messagebox.showinfo('Info','No more predictions available')
+
+        
+        
+        
+
+
+
+
+def clearAddress(e):
+    pageEntry.delete(0,END)
+    pageEntry.delete(END,'')
 
 
 def getText(e):
@@ -209,6 +274,7 @@ def findTxt():
         while 1:
             idx = textbox.search(s,idx,nocase=1,stopindex=END)
             if not idx:break
+            #lastidx eli viimeinen indeksipaikka huomaa len funktio joka laskee textboxin merkkijonon pituuden
             lastidx = '%s+%dc' % (idx,len(s))
             textbox.tag_add('found',idx,lastidx)
             idx=lastidx
@@ -255,6 +321,7 @@ frame3 = Frame(root, background = 'grey1')
 frame4 = Frame(root)
 frame5 = Frame(root,background = 'grey1')
 frame6 = Frame(root,background = 'grey1')
+frame7 = Frame(root,background = 'grey1')
 scrollbar = Scrollbar(frame2)
 scrollbar.pack(side = RIGHT, fill = Y)
 
@@ -279,6 +346,7 @@ fontPlus = Button(frame5,text="+",bg='grey1',fg='white',command=increaseFont)
 fontMinus = Button(frame5,text="-",bg='grey1',fg='white',command=decreaceFont)
 searchBtn = Button(frame6,text='search from text',bg='grey1',fg='white',command=findTxt)
 searchInput = Entry(frame6)
+nextPredic = Button(root,text='Next prediction',command=nextPrediction,bg='grey',fg='white')
 
 
 #delBtn = Button(root, text = 'Delete', command = delUrl)
@@ -290,8 +358,11 @@ frame3.pack()
 frame4.pack()
 frame5.pack()
 frame6.pack()
+#frame7.pack()
+nextPredic.place(x=420,y=36)
 prevBtn.pack(side=LEFT,pady=5,padx=5)
 pageEntry.pack(side=LEFT)
+#nextBtn.pack()
 nextBtn.pack(side=LEFT)
 fontPlus.pack(side=LEFT,pady=5,padx=5)
 fontMinus.pack(side=RIGHT,pady=5,padx=5)
@@ -313,6 +384,9 @@ historyBtn.pack(side=LEFT,pady=5,padx=5)
 tree.bind("<Double-1>",selectUrl)
 tree.bind("<Control-d>",delUrl)
 root.bind("<Return>",getText)
+root.bind("<KeyRelease>",autoText)
+#bindataan pelkästään backspacen vapautus
+root.bind("<KeyRelease-BackSpace>",clearAddress)
 root.mainloop()
 
 
