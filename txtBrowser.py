@@ -1,6 +1,6 @@
 from tkinter import*
 from tkinter import ttk
-
+#from tkinter.ttk import*
 import tkinter
 import customtkinter
 import sqlite3
@@ -11,6 +11,8 @@ from tkinter.font import Font
 from gtts import gTTS
 from tkinter import messagebox
 import keyboard
+import time
+from fpdf import FPDF
 
 
 generalUrls = ['is.fi','cnn.com','yle.fi','mtv.fi','hs.fi','bbc.co.uk','cbn.com','abc.com']
@@ -21,13 +23,132 @@ global temp
 temp = []
 
 
-def autoText(e):
-    value = e.widget.get()
-    print(value)
-    if value=='':
-        data=generalUrls
+    #return webPage
+
+def saveToPdf():
+    content = textbox.get('1.0','end-1c')
+    convertContent = content.encode('latin-1','replace').decode('latin-1')
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font('Helvetica',size=12)
+    pdf.multi_cell(h=5.0,w=0,text=convertContent)
+    pdf.output('pagePdf.pdf')
+def findLinks():
+    linkPage = Toplevel()
+   
+    container = Text(linkPage,wrap='char')
+    container.pack(fill="both",expand=True)
+    #linkBox = Text(linkPage)
+    #linkBox.pack()
+    Links = []
+    externals = []
+    webPage = (Entry.get(pageEntry))
+    page = requests.get('https://www.'+webPage)
+    soup = BeautifulSoup(page.content,'html.parser')
+    #haetaan kaikki a tagit
+    links = soup.find_all('a')
+    ExtCBvar = IntVar()
+    if ExtCBvar.get()==0:
+        for link in soup.select('a[href^="https://"]'):
+            externals.append(link['href'])
+            #container.window_create("end",window=externals)
+        for i in range(len(externals)):
+             extLbl = Button(container,text=externals[i])
+             container.window_create("end",window=extLbl)
+        container.configure(state="disabled")
+    
+    for link in links:
+        
+         #print("Link:", link.get("href"), "Text:", link.string)
+        Links.append(link.get("href"))
+        #välilyönnin lisäys jokaisen linkin jälkeen
+        x='\n'.join(Links)
+        #Links.append(link.get(link.string))
+    #lisäys text-komponenttiin silmukan ulkopuolella, niin ohjelma ei ala jumittamaan
+    #linkBox.insert(INSERT,Links,END)
+        #luodaan silmukalla niin monta buttonia, kuin listassa on alkioita.
+        j=0
+    for i in range(len(Links)):
+        j=j+1
+        #lamdba viittaus ja muuttujamäärittely funktiolle, jolla saadaan buttonin teksti
+        #win ja buttonText on muuttujia, jotka lähetetään getLinkUrl funktiolle
+        #container on Text komponentti, jonka sisälle kääritään buttonit
+        linklLbl = Button(container,text=Links[i],command=lambda win=linkPage, buttonText=Links[i]:getLinkUrl(buttonText,win))
+        #buttonin taustaväri sen mukaan onko buttonin jaollinen 2 vai ei, eli joka toinen buttoni on eriväriä.,
+        if j % 2 == 0:
+            linklLbl.configure(bg="lightblue")
+            
+        else:
+            linklLbl.configure(bg="lightcyan3")
+            
+        container.window_create("end",window=linklLbl)
+    container.configure(state="disabled")
+    totalLbl = Label(linkPage,text="Links total: "+str(j))
+    
+    externalCB = Checkbutton(linkPage,text='External links only?',variable=ExtCBvar,onvalue=1,offvalue=0)
+    externalCB.pack()
+    
+    totalLbl.pack()
+    linkPage.mainloop()
+    return container
+
+    
+    
+
+   
+def getLinkUrl(link,winName):
+    #iconify pienentään ikkunan task bariin
+    winName.iconify()
+    x=str(link)
+    clearText()
+    webPage = (Entry.get(pageEntry))
+    #jos x alkaa / merkillä, 0,1 on merkkijonon etsintäalue
+    if x.startswith("/",0,1):
+        fullUrl = "https://"+webPage+link
+        print(fullUrl)
+        page = requests.get(fullUrl)
+        soup = BeautifulSoup(page.text,'html.parser')
+        result = soup.find_all('html')
+        pageEntry.delete(0,END)
+        pageEntry.insert(END,fullUrl)
     else:
-        data = []
+         page = requests.get(link)
+         soup = BeautifulSoup(page.text,'html.parser')
+         result = soup.find_all('html')
+        
+    
+
+    
+    
+    for r in result:
+        final = r.text
+        #tyhjä väli kirjainten väliin
+        #Final = ' '.join(final)
+        textbox.insert(INSERT,'\n ',END)
+        textbox.insert(INSERT,final,END)
+        textbox.insert(INSERT,'\n ',END)
+        #pageNum +=1
+        break
+    textbox.insert(INSERT,'\n',END)
+    barUpdate()
+    
+
+def barUpdate():
+    progressbar['value']=50
+    root.update_idletasks()
+    time.sleep(1)
+    progressbar['value']=100
+    root.update_idletasks()
+
+def autoText(e):
+    if CBvar.get()==0:
+
+        value = e.widget.get()
+        print(value)
+        if value=='':
+            data=generalUrls
+        else:
+            data = []
         #listan läpikäynti item on aina yksittäinen listan alkio
         for item in generalUrls:
             #jos käyttäjän syöttämällä (value) merkkijonolla/merkillä löytyy listalta tuloksia, lisätään tulokset data ja temp listoihin
@@ -41,7 +162,12 @@ def autoText(e):
                 for item in data:
                     pageEntry.insert(END,item)
                     break
+                
+                
+                
     #updateText(data)
+
+
 
 '''
 def updateText(data):
@@ -55,17 +181,18 @@ def updateText(data):
         pageEntry.insert(END,item)
         break
 '''
-        
-  
+
+
     #nextPrediction(data,i)
 #tämä päivittää j-muuttujaa ja näyttää sen avulla aina seuraavan alkion listalta
+#next prediction funktion parametri saa rivillä 368 lambda viittauksella arvoksi
 j = 0
 def nextPrediction():
     global j
     j=j+1
+    
     print(temp)
     try:
-
         pageEntry.delete(0,END)    
         pageEntry.insert(END,temp[j])
         #try/exceptillä saadaan tulostettua allaoleva ilmoitus kun kohdataan indexerror
@@ -86,6 +213,7 @@ def clearAddress(e):
 
 def getText(e):
     clearText()
+    getPageUrl()
     #globaalin muuttujat, että niitä voidaan käyttää myös muissa funktioissa
     global pages
     global pageNum
@@ -115,6 +243,7 @@ def getText(e):
         pageNum +=1
         break
     textbox.insert(INSERT,'\n',END)
+    barUpdate()
     
 
 #nettisivun tekstin tallennus äänitiedostoksi.
@@ -288,6 +417,18 @@ def findTxt():
 root = Tk() 
 root.configure(background = 'grey1')
 root.title('TxtBrowser')
+menubar = Menu(root)
+root.config(menu=menubar)
+optionsMenu = Menu(menubar)
+
+optionsMenu.add_command(
+    label='Save to PDF',
+    command=saveToPdf
+)
+
+menubar.add_cascade(label='Options',menu=optionsMenu)
+
+
 
 #treeview näkymä ja sen tyylimäärittelyt
 style = ttk.Style()
@@ -310,6 +451,10 @@ tree.column('Bookmark',anchor=W)
 tree.heading('Bookmark',text = 'URL')
 tree.heading('ID', text= 'Id-number')
 
+CBvar = IntVar()
+disableCB = Checkbutton(root,text='Disable predictive',variable=CBvar,onvalue=1,offvalue=0)
+disableCB.place(x=50,y=30) 
+
 
 
 titlefont = Font(family = 'Segoe Print')
@@ -322,8 +467,10 @@ frame4 = Frame(root)
 frame5 = Frame(root,background = 'grey1')
 frame6 = Frame(root,background = 'grey1')
 frame7 = Frame(root,background = 'grey1')
+
 scrollbar = Scrollbar(frame2)
 scrollbar.pack(side = RIGHT, fill = Y)
+progressbar = ttk.Progressbar(frame2,orient=HORIZONTAL,length=100,mode='determinate')
 
 titlelbl = Label(root, text = 'Txt Browser', font = titlefont,bg='grey1',fg='white')
 pageEntry = Entry(frame1)
@@ -342,11 +489,18 @@ historyBtn = Button(frame3, text = 'History', command = showHistory,bg='grey1',f
 speechBtn = Button(frame3, text = 'txt to speech', command = TxtTospeech,bg='grey1',fg='white')
 #showbookmarks lähettää lambda-viittuksena commandin funktiokutsussa treeview-komponentin parametrina itse funktiolle
 bookBtn = Button(root, text = 'Show/Hide bookmarks', command  = lambda:showBookmarks(tree),bg='grey1',fg='white')
+linksBtn = Button(root,text=' Links',command=findLinks,bg='grey1',fg="white")
+
+#funktio muuttaa linksbuttonin tekstiö configure komennolla
+def getPageUrl():
+    webPage = (Entry.get(pageEntry))
+    linksBtn.configure(text='Show '+webPage+' links')
+
 fontPlus = Button(frame5,text="+",bg='grey1',fg='white',command=increaseFont)
 fontMinus = Button(frame5,text="-",bg='grey1',fg='white',command=decreaceFont)
 searchBtn = Button(frame6,text='search from text',bg='grey1',fg='white',command=findTxt)
 searchInput = Entry(frame6)
-nextPredic = Button(root,text='Next prediction',command=nextPrediction,bg='grey',fg='white')
+nextPredic = Button(root,text='Next prediction',command=nextPrediction,bg='grey1',fg='white')
 
 
 #delBtn = Button(root, text = 'Delete', command = delUrl)
@@ -375,6 +529,8 @@ clearBtn.pack(side=RIGHT,pady=5,padx=5)
 
 speechBtn.pack(side=LEFT)
 bookBtn.pack(pady=5,padx=5)
+linksBtn.pack()
+progressbar.pack(side=TOP)
 textbox.pack()
 tree.pack()
 historyBtn.pack(side=LEFT,pady=5,padx=5)

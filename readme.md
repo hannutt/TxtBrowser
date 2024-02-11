@@ -6,3 +6,6 @@ Go back / go forward buttons
 Browsing history
 Text search
 Simple predictive text input
+Updating progresbar
+Link collector. Program collects all the links within a web page and displays them in a separate window.
+Save page text to pdf-file
