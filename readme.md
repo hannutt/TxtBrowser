@@ -2,10 +2,10 @@ A program that imitates the Lynx web browser. With the help of the beautiful sou
 
 other features:
 Changing the font size with the buttons.
-Go back / go forward buttons
-Browsing history
-Text search
-Simple predictive text input
-Updating progresbar
+Go back / go forward buttons.
+Browsing history.
+Text search.
+Simple predictive text input.
+Updating progresbar.
 Link collector. Program collects all the links within a web page and displays them in a separate window.
-Save page text to pdf-file
+Save page text to pdf-file.

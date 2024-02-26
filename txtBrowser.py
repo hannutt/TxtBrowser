@@ -47,60 +47,87 @@ def findLinks():
     soup = BeautifulSoup(page.content,'html.parser')
     #haetaan kaikki a tagit
     links = soup.find_all('a')
+    AllCBvar = IntVar()
     ExtCBvar = IntVar()
-    if ExtCBvar.get()==0:
-        for link in soup.select('a[href^="https://"]'):
+    for link in soup.select('a[href^="https://"]'):
+            
             externals.append(link['href'])
             #container.window_create("end",window=externals)
-        for i in range(len(externals)):
-             extLbl = Button(container,text=externals[i])
+    #j laskee linkkien kokonaismäärän
+    j = 0
+    for i in range(len(externals)):
+    #lamdba viittaus ja muuttujamäärittely funktiolle, jolla saadaan buttonin teksti
+    #win ja buttonText on muuttujia, jotka lähetetään getLinkUrl funktiolle
+    #container on Text komponentti, jonka sisälle kääritään buttonit
+             extLbl = Button(container,text=externals[i],command=lambda win=linkPage, buttonText=externals[i]:getLinkUrl(buttonText,win))
+             j=j+1
+               #buttonin taustaväri sen mukaan onko buttonin jaollinen 2 vai ei, eli joka toinen buttoni on eriväriä.,
+             if j % 2 == 0:
+                extLbl.configure(bg="lightblue")
+            
+             else:
+                extLbl.configure(bg="lightcyan3")
+             
+             
              container.window_create("end",window=extLbl)
-        container.configure(state="disabled")
-    
-    for link in links:
+             container.configure(state="disabled")
+    totalLbl = Label(linkPage,text="Links total: "+str(j))
+    totalLbl.pack()
+    linkPage.mainloop()
+
+
+ 
+''''
+        for link in links:
         
          #print("Link:", link.get("href"), "Text:", link.string)
-        Links.append(link.get("href"))
+            Links.append(link.get("href"))
         #välilyönnin lisäys jokaisen linkin jälkeen
-        x='\n'.join(Links)
+            x='\n'.join(Links)
         #Links.append(link.get(link.string))
     #lisäys text-komponenttiin silmukan ulkopuolella, niin ohjelma ei ala jumittamaan
     #linkBox.insert(INSERT,Links,END)
         #luodaan silmukalla niin monta buttonia, kuin listassa on alkioita.
         j=0
-    for i in range(len(Links)):
-        j=j+1
+        for i in range(len(Links)):
+            j=j+1
         #lamdba viittaus ja muuttujamäärittely funktiolle, jolla saadaan buttonin teksti
         #win ja buttonText on muuttujia, jotka lähetetään getLinkUrl funktiolle
         #container on Text komponentti, jonka sisälle kääritään buttonit
-        linklLbl = Button(container,text=Links[i],command=lambda win=linkPage, buttonText=Links[i]:getLinkUrl(buttonText,win))
+            linklLbl = Button(container,text=Links[i],command=lambda win=linkPage, buttonText=Links[i]:getLinkUrl(buttonText,win))
         #buttonin taustaväri sen mukaan onko buttonin jaollinen 2 vai ei, eli joka toinen buttoni on eriväriä.,
-        if j % 2 == 0:
-            linklLbl.configure(bg="lightblue")
+            if j % 2 == 0:
+                linklLbl.configure(bg="lightblue")
             
-        else:
-            linklLbl.configure(bg="lightcyan3")
+            else:
+                linklLbl.configure(bg="lightcyan3")
             
-        container.window_create("end",window=linklLbl)
-    container.configure(state="disabled")
-    totalLbl = Label(linkPage,text="Links total: "+str(j))
+            container.window_create("end",window=linklLbl)
+            container.configure(state="disabled")
+            totalLbl = Label(linkPage,text="Links total: "+str(j))
+'''
     
-    externalCB = Checkbutton(linkPage,text='External links only?',variable=ExtCBvar,onvalue=1,offvalue=0)
-    externalCB.pack()
+    #externalCB = Checkbutton(linkPage,text='External links only?',variable=ExtCBvar,onvalue=1,offvalue=0)
+    #externalCB.pack()
+    #AllCB = Checkbutton(linkPage,text='All links', variable=AllCBvar,onvalue=1,offvalue=0)
+    #AllCB.pack()
     
-    totalLbl.pack()
-    linkPage.mainloop()
-    return container
-
+   
     
     
 
    
 def getLinkUrl(link,winName):
     #iconify pienentään ikkunan task bariin
+    page = requests.get(link)
+    soup = BeautifulSoup(page.text,'html.parser')
+    result = soup.find_all('html')
     winName.iconify()
-    x=str(link)
+    pageEntry.delete(0,END)
+    #x=str(link)
     clearText()
+    pageEntry.insert(END,link)
+    '''
     webPage = (Entry.get(pageEntry))
     #jos x alkaa / merkillä, 0,1 on merkkijonon etsintäalue
     if x.startswith("/",0,1):
@@ -115,6 +142,7 @@ def getLinkUrl(link,winName):
          page = requests.get(link)
          soup = BeautifulSoup(page.text,'html.parser')
          result = soup.find_all('html')
+    '''
         
     
 
